@@ -17,15 +17,15 @@ const handler = NextAuth({
 				token: {},
 			},
 			async authorize(credentials) {
-				console.log(credentials, 'credentials');
 				if (credentials?.token) {
 					const parsedToken = JSON.parse(credentials.token);
 
+					console.log(parsedToken, 'credentials');
 					return {
-						id: parsedToken.id,
-						accessToken: parsedToken.password,
+						id: parsedToken._id,
+						accessToken: parsedToken.accessToken,
 						refreshToken: '', // Set this if you have a refresh token
-						user: parsedToken.username,
+						user: parsedToken.user,
 					};
 				}
 				return null;

@@ -6,22 +6,39 @@ import Link from 'next/link';
 import React from 'react';
 import { BackNavigation, HaveAccLogin } from '../_ctx';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useSignUpStudentMutation } from './sign-up-api-slice';
+import { signIn } from 'next-auth/react';
 
 export function ChildSignUp() {
 	const searchParams = useSearchParams();
+	const [store, { isLoading }] = useSignUpStudentMutation();
+
 	const router = useRouter();
 	type FieldType = {
-		username?: string;
+		name?: string;
 		email?: string;
 		institute?: string;
 		password?: string;
 	};
 
-	const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
-		console.log('Success:', values);
-		router.push(
-			'/auth?in_page=child_add_parent&from=' + searchParams.get('from')
-		);
+	const onFinish: FormProps<FieldType>['onFinish'] = async (values) => {
+		const { data } = await store(values);
+
+		if (data?.statusCode === 200 && data?.data?.accessToken) {
+			const result = await signIn('credentials', {
+				token: JSON.stringify(data.data),
+				redirect: false,
+			});
+
+			if (result?.error) {
+				console.error('Sign in error:', result.error);
+				return;
+			}
+
+			if (result?.ok) {
+				router.push('/auth?in_page=otp&from=' + searchParams.get('from'));
+			}
+		}
 	};
 
 	return (
@@ -40,11 +57,9 @@ export function ChildSignUp() {
 						className="space-y-3"
 					>
 						<Form.Item<FieldType>
-							label="Username"
-							name="username"
-							rules={[
-								{ required: true, message: 'Please input your username!' },
-							]}
+							label="Name"
+							name="name"
+							rules={[{ required: true, message: 'Please input your name!' }]}
 							className="!mb-0"
 						>
 							<Input />
@@ -64,7 +79,7 @@ export function ChildSignUp() {
 							<Input />
 						</Form.Item>
 						<Form.Item<FieldType>
-							label="I nstitute"
+							label="Institute"
 							name="institute"
 							rules={[
 								{
@@ -100,12 +115,14 @@ export function ChildSignUp() {
 
 						<Form.Item label={null}>
 							<Button
+								loading={isLoading}
+								disabled={isLoading}
 								type="primary"
 								htmlType="submit"
 								className="w-full"
 								size="large"
 							>
-								Submit
+								Submit{isLoading ? 'ing...' : ''}
 							</Button>
 						</Form.Item>
 					</Form>

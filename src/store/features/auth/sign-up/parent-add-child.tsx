@@ -7,13 +7,17 @@ import React from 'react';
 import { AddChild, BackNavigation, HaveAccLogin } from '../_ctx';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { X } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { useInviteToParentMutation } from './sign-up-api-slice';
 type FieldType = {
 	have_child_account?: 'yes' | 'no';
-	email?: string;
-	password?: string;
+	message?: string;
+	user_id?: any;
 };
 
 export function ParentAddChild() {
+	const { data: session } = useSession();
+	const [store, { isLoading }] = useInviteToParentMutation();
 	const searchParams = useSearchParams();
 	const [modal, setModal] = React.useState<{ data: any; status: boolean }>({
 		data: null,
@@ -21,15 +25,26 @@ export function ParentAddChild() {
 	});
 	const [form] = Form.useForm();
 
-	const watch = Form.useWatch('voice_mail', form);
+	const user_id = Form.useWatch('user_id', form);
 	const have_child_account = Form.useWatch('have_child_account', form);
-	console.log(have_child_account);
 
 	const router = useRouter();
 
-	const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
-		console.log('Success:', values);
-		router.push('/auth?in_page=otp&from=' + searchParams.get('from'));
+	const onFinish: FormProps<FieldType>['onFinish'] = async (values) => {
+		if (have_child_account === 'yes') {
+			const { data } = await store({
+				studentId: values.user_id?.map((v: any) => v?._id),
+				parentId: session?.user._id,
+				message: values.message || '',
+			});
+
+			if (data?.statusCode === 200) {
+				router.push('/user');
+			}
+			console.log('Success:', values);
+		} else {
+			router.push('/user');
+		}
 	};
 
 	return (
@@ -59,63 +74,79 @@ export function ParentAddChild() {
 							</Radio.Group>
 						</Form.Item>
 						{have_child_account === 'yes' && (
-							<Form.List name="voice_mail">
-								{(fields, { add, remove }) => (
-									<>
-										<p className="db-label-1">Add Your Child here</p>
-										{fields.map(({ key, name }) => {
-											const user = watch?.[name];
+							<>
+								<Form.List name="user_id">
+									{(fields, { add, remove }) => (
+										<>
+											<p className="db-label-1">Add Your Child here</p>
+											{fields.map(({ key, name }) => {
+												const user = user_id?.[name];
 
-											return (
-												<div
-													key={key}
-													className="flex justify-between items-center gap-2 "
+												return (
+													<div
+														key={key}
+														className="flex justify-between items-center gap-2 "
+													>
+														<span>{user}</span>
+
+														<Button
+															size="small"
+															danger
+															type="dashed"
+															icon={<X />}
+															onClick={() => {
+																remove(name);
+															}}
+														></Button>
+													</div>
+												);
+											})}
+
+											<div className="text-right">
+												<Button
+													type="primary"
+													size="small"
+													className="!w-auto"
+													onClick={() => setModal({ data: {}, status: true })}
+													block
 												>
-													<span>{user}</span>
+													Add New
+												</Button>
 
-													<Button
-														size="small"
-														danger
-														type="dashed"
-														icon={<X />}
-														onClick={() => {
-															remove(name);
-														}}
-													></Button>
-												</div>
-											);
-										})}
+												<AddChild
+													modal={modal}
+													setModalHandler={setModal}
+													add={add}
+												/>
+											</div>
+										</>
+									)}
+								</Form.List>
+								<Form.Item<FieldType> name="message" label="Message">
+									<Input.TextArea />
+								</Form.Item>
+							</>
+						)}
 
-										<div className="text-right">
-											<Button
-												type="primary"
-												size="small"
-												className="!w-auto"
-												onClick={() => setModal({ data: {}, status: true })}
-												block
-											>
-												Add New
-											</Button>
-
-											<AddChild
-												modal={modal}
-												setModalHandler={setModal}
-												add={add}
-											/>
-										</div>
-									</>
-								)}
-							</Form.List>
+						{have_child_account === 'no' && (
+							<p className="text-red-500">
+								Child account must be created first{' '}
+								<Link href={'/auth?in_page=child_signup&from=child_signup'}>
+									Click Here
+								</Link>
+							</p>
 						)}
 
 						<Form.Item label={null}>
 							<Button
+								loading={isLoading}
+								disabled={isLoading}
 								type="primary"
 								htmlType="submit"
 								className="w-full"
 								size="large"
 							>
-								Submit
+								Submit{isLoading && 'ing...'}
 							</Button>
 						</Form.Item>
 					</Form>

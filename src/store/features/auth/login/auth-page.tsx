@@ -29,7 +29,7 @@ export function AuthPage() {
 					</Link>
 					<Link className="w-full" href={`/auth?in_page=signup`}>
 						<Button className="w-full" type="default" size="large">
-							Login
+							Sign Up
 						</Button>
 					</Link>
 				</div>

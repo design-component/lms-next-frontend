@@ -1,25 +1,42 @@
+'use client';
 import type { FormProps } from 'antd';
 import { Button, Form, Input } from 'antd';
 import React from 'react';
 import { BackNavigation, NotAccSignUp } from '../_ctx';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useOtpVerifyParentMutation } from '../sign-up/sign-up-api-slice';
+import { useSession } from 'next-auth/react';
 
 export function Otp() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
+	const { data: session } = useSession();
+	console.log(session?.user?._id, 'session');
 
 	type FieldType = {
 		new_password?: string;
 		old_password?: string;
 		remember?: string;
 	};
+	const [store, { isLoading }] = useOtpVerifyParentMutation();
 
-	const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
-		console.log('Success:', values);
-		if (searchParams.get('from') === 'parent_login') {
-			router.push('/parent');
-		} else if (searchParams.get('from') === 'child_login') {
-			router.push('/user');
+	const onFinish: FormProps<FieldType>['onFinish'] = async (values) => {
+		if (searchParams.get('from') === 'parent_signup') {
+			const { data } = await store({ ...values, userId: session?.user?._id });
+
+			if (data?.statusCode === 200 && data?.status) {
+				router.push(
+					'/auth?in_page=parent_add_child&from=' + searchParams.get('from')
+				);
+			}
+		} else if (searchParams.get('from') === 'child_signup') {
+			const { data } = await store({ ...values, userId: session?.user?._id });
+
+			if (data?.statusCode === 200 && data?.status) {
+				router.push(
+					'/auth?in_page=child_add_parent&from=' + searchParams.get('from')
+				);
+			}
 		}
 	};
 
@@ -47,21 +64,27 @@ export function Otp() {
 							className="flex justify-center"
 							hasFeedback
 							validateStatus="success"
+							name="otp"
 						>
-							<Input.OTP size="large" length={4} />
+							<Input.OTP size="large" length={6} />
 						</Form.Item>
 
 						<Form.Item className="!mb-0" label={null}>
 							<Button
+								disabled={isLoading}
+								loading={isLoading}
 								type="primary"
 								htmlType="submit"
 								className="w-full"
 								size="large"
 							>
-								Submit
+								Submit{isLoading ? 'ing...' : ''}
 							</Button>
 						</Form.Item>
 					</Form>
+					<p className="text-center text-sm/6 text-gray-500 mt-2">
+						Expire in 10 minutes
+					</p>
 					<NotAccSignUp />
 				</div>
 			</div>

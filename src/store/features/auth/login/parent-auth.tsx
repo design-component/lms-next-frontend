@@ -11,9 +11,8 @@ export function ParentAuth() {
 	const searchParams = useSearchParams();
 	const router = useRouter();
 	type FieldType = {
-		username?: string;
+		email?: string;
 		password?: string;
-		remember?: string;
 	};
 
 	const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
@@ -37,14 +36,18 @@ export function ParentAuth() {
 						className="space-y-3"
 					>
 						<Form.Item<FieldType>
-							label="Username"
-							name="username"
+							label="Email"
+							name="email"
 							rules={[
-								{ required: true, message: 'Please input your username!' },
+								{
+									required: true,
+									message: 'Please input your email!',
+									type: 'email',
+								},
 							]}
 							className="!mb-0"
 						>
-							<Input />
+							<Input type="email" placeholder="Enter your email" />
 						</Form.Item>
 
 						<Form.Item<FieldType>
