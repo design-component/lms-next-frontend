@@ -37,7 +37,7 @@ const api = apiSlice.injectEndpoints({
 
 		findByChildEmail: builder.query<any, any>({
 			query: (data) => ({
-				url: `parent-registration/find-by-email/${data}`,
+				url: `student-registration/find-by-email/${data}`,
 				method: 'GET',
 			}),
 		}),
@@ -57,6 +57,23 @@ const api = apiSlice.injectEndpoints({
 				body: data,
 			}),
 		}),
+
+		// sign in
+		signInParent: builder.mutation<any, any>({
+			query: (data) => ({
+				url: 'parent-registration/login',
+				method: 'POST',
+				body: data,
+			}),
+		}),
+
+		signInStudent: builder.mutation<any, any>({
+			query: (data) => ({
+				url: 'student-registration/login',
+				method: 'POST',
+				body: data,
+			}),
+		}),
 	}),
 });
 
@@ -65,6 +82,10 @@ export const {
 	useOtpVerifyParentMutation,
 	useSignUpStudentMutation,
 	useFindByParentEmailQuery,
+	useFindByChildEmailQuery,
 	useInviteToParentMutation,
 	useInviteToChildMutation,
+
+	useSignInStudentMutation,
+	useSignInParentMutation,
 } = api;

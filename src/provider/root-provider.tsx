@@ -3,7 +3,7 @@
 import { setupListeners } from '@reduxjs/toolkit/query';
 import { SessionProvider } from 'next-auth/react';
 
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Provider } from 'react-redux';
 import { ThemeProvider } from './theme-provider';
 import { AppStore, makeStore } from '@/store';
@@ -24,13 +24,20 @@ export const RootProviders = ({ children }: { children: React.ReactNode }) => {
 			return unsubscribe;
 		}
 	}, []);
+
+	const contextValue = useMemo(() => ({ name: 'Ant Design' }), []);
+
 	return (
 		<ThemeProvider attribute="class">
 			<AntdRegistry>
-				<SessionProvider>
-					<Provider store={storeRef.current}>{children}</Provider>
-				</SessionProvider>
+				<Context.Provider value={contextValue}>
+					<SessionProvider>
+						<Provider store={storeRef.current}>{children}</Provider>
+					</SessionProvider>
+				</Context.Provider>
 			</AntdRegistry>
 		</ThemeProvider>
 	);
 };
+
+const Context = React.createContext({ name: 'Default' });

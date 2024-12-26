@@ -8,6 +8,7 @@ import { BackNavigation, HaveAccLogin } from '../_ctx';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSignUpParentMutation } from './sign-up-api-slice';
 import { signIn } from 'next-auth/react';
+import { toast } from '@/lib';
 
 export function ParentSignUp() {
 	const [store, { isLoading }] = useSignUpParentMutation();
@@ -36,6 +37,9 @@ export function ParentSignUp() {
 			if (result?.ok) {
 				router.push('/auth?in_page=otp&from=' + searchParams.get('from'));
 			}
+		}
+		if (!data?.status && data) {
+			toast({ message: 'Error', description: data.message, type: 'error' });
 		}
 	};
 

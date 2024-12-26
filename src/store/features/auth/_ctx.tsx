@@ -4,7 +4,10 @@ import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-import { useFindByParentEmailQuery } from './sign-up/sign-up-api-slice';
+import {
+	useFindByChildEmailQuery,
+	useFindByParentEmailQuery,
+} from './sign-up/sign-up-api-slice';
 import { IParent } from '@/types';
 
 export const NotAccSignUp = () => {
@@ -48,10 +51,11 @@ export const BackNavigation = () => {
 	);
 };
 
-export const AddChild = ({
+export const AddParent = ({
 	modal,
 	setModalHandler,
 	add,
+	data,
 }: {
 	modal: {
 		status: boolean;
@@ -60,34 +64,25 @@ export const AddChild = ({
 	// eslint-disable-next-line no-unused-vars
 	add: (data: any) => void;
 	setModalHandler: Function;
+	data: IParent[];
 }) => {
+	const [email, setEmail] = useState('');
+	const { data: parents, isLoading } = useFindByChildEmailQuery(email, {
+		skip: !email,
+	});
 	type FieldType = {
-		username?: string;
-		email?: string;
-		password?: string;
+		emailX?: string;
 	};
-	const [select, setSelect] = useState('');
 	const [form] = Form.useForm<FieldType>();
-	const data = [
-		{
-			title: 'Ant Design Title 1',
-		},
-		{
-			title: 'Ant Design Title 2',
-		},
-		{
-			title: 'Ant Design Title 3',
-		},
-	];
+
 	const onFinish = (values: FieldType) => {
-		console.log('Success:', select);
-		add(select);
+		setEmail(values?.emailX || '');
 	};
 
 	return (
 		<>
 			<Modal
-				title="Add Child"
+				title="Add Parent"
 				open={modal.status}
 				centered
 				onOk={() =>
@@ -114,7 +109,7 @@ export const AddChild = ({
 				>
 					<Form.Item<FieldType>
 						label="Email"
-						name="email"
+						name="emailX"
 						rules={[{ required: true, message: 'Please input your email!' }]}
 						className="!mb-0"
 					>
@@ -126,25 +121,29 @@ export const AddChild = ({
 							Search Account
 						</Button>
 					</Form.Item>
+
 					<div className="max-h-44 overflow-y-auto">
 						<List
+							loading={isLoading}
 							itemLayout="horizontal"
-							dataSource={data}
-							renderItem={(item, index) => (
+							dataSource={parents?.data || []}
+							renderItem={(item) => (
 								<List.Item
-									className={`${select === item.title ? 'bg-gray-100' : ''}`}
+									className={`cursor-pointer hover:bg-slate-200   !px-2 rounded-md !border ${
+										data?.some((i) => i._id === item._id) ? 'bg-gray-100' : ''
+									}`}
 									onClick={() => {
-										add(item.title);
-										setSelect(item.title);
+										if (!data?.some((i) => i._id === item._id)) {
+											add(item);
+										}
 									}}
 								>
 									<List.Item.Meta
 										avatar={
-											<Avatar
-												src={`https://api.dicebear.com/7.x/miniavs/svg?seed=${index}`}
-											/>
+											<Avatar style={{ backgroundColor: '#87d068' }}>U</Avatar>
 										}
-										title={<span>{item.title}</span>}
+										title={<span>{item.name}</span>}
+										description={<span>{item.email}</span>}
 									/>
 								</List.Item>
 							)}
@@ -155,7 +154,7 @@ export const AddChild = ({
 		</>
 	);
 };
-export const AddParent = ({
+export const AddChild = ({
 	modal,
 	setModalHandler,
 	add,
@@ -186,7 +185,7 @@ export const AddParent = ({
 	return (
 		<>
 			<Modal
-				title="Add Parent"
+				title="Add Child"
 				open={modal.status}
 				centered
 				onOk={() =>

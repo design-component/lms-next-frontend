@@ -85,10 +85,12 @@ export function ParentAddChild() {
 												return (
 													<div
 														key={key}
-														className="flex justify-between items-center gap-2 "
+														className="flex justify-between items-center gap-2 border  p-2 rounded-md"
 													>
-														<span>{user}</span>
-
+														<p className="flex flex-col">
+															<span>{user?.name}</span>
+															<span>{user?.email}</span>
+														</p>
 														<Button
 															size="small"
 															danger
@@ -117,6 +119,7 @@ export function ParentAddChild() {
 													modal={modal}
 													setModalHandler={setModal}
 													add={add}
+													data={user_id}
 												/>
 											</div>
 										</>
